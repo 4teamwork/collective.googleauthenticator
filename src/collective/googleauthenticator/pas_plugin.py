@@ -25,9 +25,9 @@ from Products.PluggableAuthService.interfaces.plugins import IAuthenticationPlug
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 
 from collective.googleauthenticator.adapter import ICameFrom
+from collective.googleauthenticator.helpers import is_two_factor_authentication_globally_enabled
 from collective.googleauthenticator.helpers import is_whitelisted_client
 from collective.googleauthenticator.helpers import sign_user_data
-
 
 logger = logging.getLogger("collective.googleauthenticator")
 
@@ -89,12 +89,13 @@ class GoogleAuthenticatorPlugin(BasePlugin):
 
         logger.debug("Found user: {0}".format(user.getProperty('username')))
 
-        two_factor_authentication_enabled = user.getProperty(
-            'enable_two_factor_authentication')
-        logger.debug("Two-step verification enabled: {0}".format(
-            two_factor_authentication_enabled))
+        enabled_for_user = user.getProperty('enable_two_factor_authentication')
+        globally_enabled = is_two_factor_authentication_globally_enabled()
+        tfa_enabled = globally_enabled or enabled_for_user
 
-        if two_factor_authentication_enabled:
+        logger.debug("Two-step verification enabled: {0}".format(tfa_enabled))
+
+        if tfa_enabled:
             # First see, if the password is correct.
             # We do this by allowing all IAuthenticationPlugin plugins to
             # authenticate the credentials, and pick the first one that is
