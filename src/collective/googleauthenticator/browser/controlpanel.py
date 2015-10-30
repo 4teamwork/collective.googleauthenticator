@@ -7,7 +7,6 @@ from zope.interface import Interface
 from zope.schema import TextLine, Bool, Text
 
 from plone.registry.interfaces import IRegistry
-from plone import api
 from plone.app.registry.browser import controlpanel
 from plone.autoform.form import AutoExtensibleForm
 from plone.directives.form import fieldset
@@ -96,28 +95,12 @@ class GoogleAuthenticatorSettingsEditForm(AutoExtensibleForm, form.EditForm):
         """
         Update properties of all users.
         """
-        from collective.googleauthenticator.helpers import (
-            enable_two_factor_authentication_for_users, disable_two_factor_authentication_for_users
-            )
         data, errors = self.extractData()
         if errors:
             self.status = self.formErrorsMessage
             return
 
-        globally_enabled = data.get('globally_enabled', None)
-
-        if globally_enabled is True:
-            # Enable for all users
-            users = api.user.get_users()
-            enable_two_factor_authentication_for_users(users)
-            logger.debug('Enabled')
-        elif globally_enabled is False:
-            # Disable for all users
-            users = api.user.get_users()
-            #disable_two_factor_authentication_for_users(users)
-            logger.debug('Disabled')
-
-        changes = self.applyChanges(data)
+        self.applyChanges(data)
         IStatusMessage(self.request).addStatusMessage(_(u"Changes saved."), "info")
         self.request.response.redirect("%s/%s" % (self.context.absolute_url(), self.control_panel_view))
 
