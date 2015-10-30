@@ -78,15 +78,6 @@
         permission="cmf.ManagePortal"
         />
 
-    <!-- -*- additional helper view for checking the global settings -*- -->
-    <browser:page
-        name="is-two-factor-authentication-globally-enabled"
-        class=".settings_helper.SettingsHelper"
-        for="Products.CMFCore.interfaces.ISiteRoot"
-        attribute="is_two_factor_authentication_globally_enabled"
-        permission="zope2.View"
-        />
-
     <!-- -*- additional helper view for checking the if enable two-factor authentication link should be shown -*- -->
     <browser:page
         name="show-enable-two-factor-authentication-link"

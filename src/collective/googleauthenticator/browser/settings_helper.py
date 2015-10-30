@@ -18,12 +18,6 @@ class SettingsHelper(BrowserView):
         self.context = context
         self.request = request
 
-    def is_two_factor_authentication_globally_enabled(self):
-        """
-        Disable the two-step verification for the user and redirect back to the `@@personal-information`.
-        """
-        return is_two_factor_authentication_globally_enabled()
-
     def show_enable_two_factor_authentication_link(self):
         """
         Indicates whether the enable two factor authentication link should be shown.
