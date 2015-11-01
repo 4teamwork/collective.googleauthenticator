@@ -25,6 +25,7 @@ from Products.PluggableAuthService.interfaces.plugins import IAuthenticationPlug
 from Products.PageTemplates.PageTemplateFile import PageTemplateFile
 
 from collective.googleauthenticator.adapter import ICameFrom
+from collective.googleauthenticator.helpers import get_secret
 from collective.googleauthenticator.helpers import is_two_factor_authentication_globally_enabled
 from collective.googleauthenticator.helpers import is_whitelisted_client
 from collective.googleauthenticator.helpers import sign_user_data
@@ -124,6 +125,18 @@ class GoogleAuthenticatorPlugin(BasePlugin):
             if authorized is None:
                 # No auth plugin was able to authenticate the user
                 return None
+
+            # At this point, some auth plugin was able to verify the user's
+            # credentials, so we either redirect the user to setup 2FA for the
+            # first time, or we proceed to ask them for the 2FA token.
+
+            if not get_secret(user):
+                # User has no secret, therefore they haven't set up 2FA yet.
+                # Redirect them to set up 2FA for the first time
+                portal_url = api.portal.get().absolute_url()
+                setup_url = '/'.join(
+                    (portal_url, '@@setup-two-factor-authentication'))
+                return self.REQUEST.RESPONSE.redirect(setup_url, lock=1)
 
             # Consume the credentials after we verified the credentials above.
             # We need to do this to prevent later IAuthenticationPlugins
