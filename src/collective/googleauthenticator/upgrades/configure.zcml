@@ -21,4 +21,22 @@
         provides="Products.GenericSetup.interfaces.EXTENSION"
         />
 
+    <genericsetup:upgradeStep
+        title="Have 'Enable two-step verification' action pass enable=1 to setup view"
+        description=""
+        source="0301"
+        destination="0302"
+        handler="collective.googleauthenticator.upgrades.to0302.upgrade"
+        profile="collective.googleauthenticator:default"
+        />
+
+    <genericsetup:registerProfile
+        name="0302"
+        title="collective.googleauthenticator.upgrades.0302"
+        description=""
+        directory="profiles/0302"
+        for="Products.CMFPlone.interfaces.IMigratingPloneSiteRoot"
+        provides="Products.GenericSetup.interfaces.EXTENSION"
+        />
+
 </configure>

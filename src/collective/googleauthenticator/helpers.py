@@ -540,3 +540,19 @@ def drop_login_failed_msg(request):
             # Drop the "Login failed" message
             continue
         status_messages.add(msg.message, msg.type)
+
+
+def make_bool(value):
+    """
+    Turn a value (string or int) into a boolean based on its truthiness.
+
+    :param value:
+    :return bool:
+    """
+    try:
+        value = int(value)
+    except (ValueError, TypeError):
+        pass
+    if isinstance(value, basestring):
+        value = value.lower() == 'true'
+    return bool(value)

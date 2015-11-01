@@ -16,6 +16,8 @@ from Products.statusmessages.interfaces import IStatusMessage
 from zope.schema import TextLine
 
 from collective.googleauthenticator.helpers import get_token_description, validate_token
+from collective.googleauthenticator.helpers import make_bool
+
 
 logger = logging.getLogger('collective.googleauthenticator')
 
@@ -53,6 +55,22 @@ class SetupForm(form.SchemaForm):
                     u"Authenticator app on your phone. This app is available for "
                     u"Android, iOS and BlackBerry devices.")
 
+    def render(self):
+        # If this view is called with enable=1, we'll later want to enable
+        # 2FA on a per-user basis for this user, so lets remember it in the
+        # session. We don't enable it here yet because we want to first verify
+        # the token to make sure the user has actually configured their
+        # authenticator app, to avoid locking them out.
+        #
+        # Using the session to store this info also makes sure it's still
+        # remembered until removed if token verification fails and the user
+        # gets sent back to the setup form.
+
+        enable = make_bool(self.request.form.get('enable', 0))
+        if enable:
+            self.request.SESSION['enable_2fa_for_user'] = True
+        return super(SetupForm, self).render()
+
     @button.buttonAndHandler(_('Verify'))
     def handleSubmit(self, action):
         if bool(api.user.is_anonymous()) is True:
@@ -73,14 +91,16 @@ class SetupForm(form.SchemaForm):
         reason = None
         if valid_token:
             try:
-                # Set the ``enable_two_factor_authentication`` to True
-                user = api.user.get_current()
-                user.setMemberProperties(mapping={'enable_two_factor_authentication': True,})
+                enable = self.should_enable_for_user()
+                if enable:
+                    # Enable per-user 2FA for this user
+                    user = api.user.get_current()
+                    user.setMemberProperties(
+                        mapping={'enable_two_factor_authentication': True,})
 
-                IStatusMessage(self.request).addStatusMessage(
-                    _("Two-step verification is successfully enabled for your account."),
-                    'info'
-                    )
+                    IStatusMessage(self.request).addStatusMessage(
+                        _("Two-step verification is successfully enabled for "
+                          "your account."), 'info')
                 redirect_url = "{0}/@@personal-information".format(self.context.absolute_url())
             except Exception as e:
                 reason = _(str(e))
@@ -94,6 +114,15 @@ class SetupForm(form.SchemaForm):
         # TODO: Is there a nicer way of resolving the "@@setup-two-factor-authentication" URL?
 
         self.request.response.redirect(redirect_url)
+
+    def should_enable_for_user(self):
+        enable = False
+        # Avoid implicitely creating a session if there isn't one already
+        session = getattr(self.request, 'SESSION', {})
+        if 'enable_2fa_for_user' in session.keys():
+            enable = make_bool(session.get('enable_2fa_for_user', False))
+            del session['enable_2fa_for_user']
+        return enable
 
     def updateFields(self, *args, **kwargs):
         """
