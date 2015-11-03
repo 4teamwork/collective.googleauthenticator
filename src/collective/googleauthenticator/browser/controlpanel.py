@@ -37,7 +37,7 @@ class IGoogleAuthenticatorSettings(Interface):
                         "otherwise - each user configures it himself. Note, that unchecking the "
                         "checkbox does not disable the two-step verification for all users."),
         required = False,
-        default = True,
+        default = False,
         )
     ip_addresses_whitelist = Text(
         title = _("White-listed IP addresses"),
